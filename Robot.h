@@ -23,7 +23,7 @@ typedef enum T_state
   STATE_TURNING,
   STATE_MOVING
 } T_state;
-// DATA PASSED TO AND ALTERED EACH STATE
+// DATA PASSED TO AND ALTERED IN EACH STATE
 typedef struct {
 	int button1_pushed;
 	int button2_pushed;
