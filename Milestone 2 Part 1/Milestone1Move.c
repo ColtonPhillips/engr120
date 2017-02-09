@@ -31,10 +31,11 @@ task main()
   while (true)
   {
   	// POLL BUTTON 1 AND BUTTON 2
-  	monitorInput(control);
+
     switch(state) // STATE MACHINE
     {
       case(STATE_IDLE):
+      	monitorInput(control);
       	state = ProcessStateIdle(control);
       break;
 

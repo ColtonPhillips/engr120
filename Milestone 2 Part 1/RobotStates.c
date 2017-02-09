@@ -13,6 +13,11 @@ void resetBothEncoders() {
 			resetMotorEncoder(MLeft);
 			resetMotorEncoder(MRight);
 }
+// CALLED BEFORE TRANSITIONING TO IDLE
+//void setButtonsFalse(RobotControl & control) {
+//	control.button1_pushed = false;
+//	control.button2_pushed = false;
+//}
 // WHEN THE ROBOT IS IDLING, WAITING FOR BUTTON PRESSES
 T_state ProcessStateIdle(RobotControl & control) {
 	setBothMotors(0);
@@ -45,6 +50,8 @@ T_state ProcessStateTurning(RobotControl & control) {
 	if (leftenc > NINETYDEG || rightenc > NINETYDEG) {
 		// WHEN MOVED 90 DEGREES, SET MOTORS TO ZERO, CHANGE STATE TO IDLE
 		setBothMotors(0);
+		//setButtonsFalse(control);
+		//resetBothEncoders();
 		return STATE_IDLE;
 	}
 	return STATE_TURNING;
@@ -57,6 +64,8 @@ T_state ProcessStateMoving(RobotControl & control) {
 	if (leftenc > ONEMETRE || rightenc > ONEMETRE) {
 		// WHEN MOVED 1 METRE, SET MOTORS TO ZERO, CHANGE STATE TO IDLE
 		setBothMotors(0);
+		//setButtonsFalse(control);
+		//resetBothEncoders();
 		return STATE_IDLE;
 	}
 	return STATE_MOVING;
