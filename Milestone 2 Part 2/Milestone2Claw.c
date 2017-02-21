@@ -48,6 +48,14 @@ task main()
       	state = ProcessStateClosing(control);
     	break;
 
+      case(STATE_FORWARD):
+      	state = ProcessStateForward(control);
+    	break;
+
+      case(STATE_BACKWARD):
+      	state = ProcessStateBackward(control);
+    	break;
+
     	default: // We should never be in this state.
     }
   }
