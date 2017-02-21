@@ -27,31 +27,31 @@ task main()
 
     switch(state) // STATE MACHINE
     {
-      case(STATE_IDLE):
+      case STATE_IDLE:
       	state = ProcStateIdle(control);
       break;
 
-      case(STATE_OPENING):
+      case STATE_OPENING:
       	state = ProcStateOpening(control);
     	break;
 
-      case(STATE_TOGGLECLAW):
+      case STATE_TOGGLECLAW:
       	state = ProcStateToggleClaw(control);
     	break;
 
-      case(STATE_FORWARD):
+      case STATE_FORWARD:
       	state = ProcStateForward(control);
     	break;
 
-      case(STATE_BACKWARD):
+      case STATE_BACKWARD:
       	state = ProcStateBackward(control);
     	break;
 		
-      case(STATE_TURNAWAY):
+      case STATE_TURNAWAY:
       	state = ProcStateTurnAway(control);
     	break;
 		
-      case(STATE_BACKAWAY):
+      case STATE_BACKAWAY:
       	state = ProcStateBackAway(control);
     	break;		
 

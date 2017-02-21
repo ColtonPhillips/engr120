@@ -63,9 +63,6 @@ T_state ProcStateToggleClaw(RobotControl & control) {
 
 //LEFT BUTTON
 //
-// For our janky purposes, we're going to use Process State Opening
-// as the opening of our claw, to actually put the magnet on there,
-// I know it's awful but that's how we are gonna role. 2 buttons baby. woo.
 // Step 2:
 T_state ProcStateOpening(RobotControl & control) {
 	setClaw(CLAW_SPEED);
@@ -98,7 +95,7 @@ T_state ProcStateTurnAway(RobotControl & control) {
 	return STATE_BACKAWAY;
 }
 // Step 6
-// move back a bit real fast to impress the judges :)
+// MOVE BACK A BIT REAL FAST TO IMPRESS THE JUDGES :)
 T_state ProcStateBackAway(RobotControl & control) {
 	setMotorsLR(-FASTSPEED , -FASTSPEED);
 	wait1Msec(300); // a blink of an eye
