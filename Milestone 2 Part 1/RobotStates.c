@@ -27,8 +27,8 @@ T_state ProcessStateIdle(RobotControl & control) {
 		control.button1_pushed = false;
 		// Reset encoder, Set Motor to move forward, Change State
 		resetBothEncoders();
-		motor[MLeft] = MEDIUMSPEED;
-		motor[MRight] = MEDIUMSPEED - MOTOR_SPEED_OFFSET;
+		motor[MLeft] = MEDIUMSPEED+4;
+		motor[MRight] = MEDIUMSPEED - MOTOR_SPEED_OFFSET-2;
 		return STATE_MOVING;
 	}
 	// BUTTON TWO TRANSITIONS TO MOVING

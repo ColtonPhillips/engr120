@@ -57,7 +57,7 @@ T_state ProcStateToggleClaw(RobotControl & control) {
 		setClaw(-CLAW_SPEED);
 	}
 	control.toggle_flag = !control.toggle_flag;
-	wait1Msec(CLAW_TIME);
+	wait1Msec(CLAW_TIME+300);
 	return STATE_IDLE;
 }
 
@@ -66,6 +66,7 @@ T_state ProcStateToggleClaw(RobotControl & control) {
 // Step 2:
 T_state ProcStateOpening(RobotControl & control) {
 	setClaw(CLAW_SPEED);
+	control.toggle_flag = !control.toggle_flag;
 	wait1Msec(CLAW_TIME);
 	return STATE_FORWARD;
 }
@@ -88,17 +89,16 @@ T_state ProcStateBackward(RobotControl & control) {
 // Step 5
 // WHEN THE ROBOT IS TURNING AWAY FROM THE BEACON, HOPEFULLY, MISSING CABLE ;)
 T_state ProcStateTurnAway(RobotControl & control) {
-	setMotorsLR(-(FASTSPEED+5) , -SLOWSPEED); // LETS SEE THIS PUPPY TURN
+	setMotorsLR(-(FASTSPEED+10) , FASTSPEED-5); // LETS SEE THIS PUPPY TURN
 	wait1Msec(TURNAWAY_TIME);
 	setAllMotorsToZero();
-	wait1Msec(300);
 	return STATE_BACKAWAY;
 }
 // Step 6
 // MOVE BACK A BIT REAL FAST TO IMPRESS THE JUDGES :)
 T_state ProcStateBackAway(RobotControl & control) {
 	setMotorsLR(-FASTSPEED , -FASTSPEED);
-	wait1Msec(300); // a blink of an eye
+	wait1Msec(BACKAWAY_TIME); // a blink of an eye
 	setAllMotorsToZero();
 	return STATE_IDLE;
 }

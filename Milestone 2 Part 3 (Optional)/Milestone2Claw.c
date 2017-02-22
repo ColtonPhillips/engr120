@@ -46,14 +46,14 @@ task main()
       case STATE_BACKWARD:
       	state = ProcStateBackward(control);
     	break;
-		
+
       case STATE_TURNAWAY:
       	state = ProcStateTurnAway(control);
     	break;
-		
+
       case STATE_BACKAWAY:
       	state = ProcStateBackAway(control);
-    	break;		
+    	break;
 
     	default: // We should never be in this state.
     }
