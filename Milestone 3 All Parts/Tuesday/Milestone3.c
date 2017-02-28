@@ -15,7 +15,7 @@
 // CLAW MOTOR: MOTOR PIN 2
 // BUTTON1: DIGITAL 1
 // BUTTON2: DIGITAL 2
-#include "Robot.h"
+#include "Devices.c"
 #include "RobotStates.c"
 // PROGRAM STARTS HERE
 task main()
