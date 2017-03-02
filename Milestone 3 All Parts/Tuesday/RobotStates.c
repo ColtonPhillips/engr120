@@ -21,8 +21,8 @@ T_state ProcStateIdle(RobotControl & control) {
 }
 
 T_state ProcStateWalk(RobotControl & control) {
-	setWheelsSpeed(SLOWSPEED);
-	if (SonarGreaterThanEqual(5)) { //cm
+	setWheelsSpeed(MEDIUMSPEED);
+	if (SonarLessThanEqual(5)) { //cm
 		return STATE_IDLE;
 	}
 	return STATE_WALK;

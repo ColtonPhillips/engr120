@@ -32,6 +32,8 @@ typedef struct {
 	bool button2_pushed;
 	bool button1_toggle_state; //these act like on-off switches
 	bool button2_toggle_state;
+	bool limitLeft_pushed; // is pressed
+	bool limitRight_pushed;
 } RobotControl;
 
 // Helper Functions:
@@ -95,6 +97,8 @@ void init_devices(RobotControl & control) {
   control.button2_pushed = false;
   control.button1_toggle_state  = false;
   control.button2_toggle_state  = false;
+  control.limitLeft_pushed = false;
+  control.limitRight_pushed = false;
 }
 
 // ability to toggle state of buttons
@@ -112,4 +116,10 @@ void monitorInput( RobotControl & control)
 
   if(SensorValue(Button2) & !control.button2_pushed)
     control.button2_pushed = true;
+
+  if(SensorValue(LimitLeft) & !control.limitLeft_pushed)
+    control.limitLeft_pushed = true;
+
+  if(SensorValue(LimitRight) & !control.limitRight_pushed)
+    control.limitRight_pushed = true;
 }
