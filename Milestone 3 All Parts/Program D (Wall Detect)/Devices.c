@@ -5,9 +5,9 @@
 
 // NEW MACROS
 #define MOTOR_CUSTOM_R_SPEED_OFFSET 7
-	#define FASTSPEED 90
-	#define MEDIUMSPEED 40
-	#define SLOWSPEED 20
+	#define FASTSPEED 100
+	#define MEDIUMSPEED 50
+	#define SLOWSPEED 30
 
 // MACROS FROM PREVIOUS BUILDS
 /*	#define NINETYDEG_ISH 972
@@ -25,7 +25,9 @@ typedef enum T_state
 {
   STATE_IDLE = 0,
   STATE_WALK,
+  STATE_BACKAWAY,
 } T_state;
+
 // DATA PASSED TO AND ALTERED IN EACH STATE
 typedef struct {
 	bool button1_pushed; // is pressed
@@ -36,21 +38,16 @@ typedef struct {
 	bool limitRight_pushed;
 } RobotControl;
 
-// Helper Functions:
-//
-// FLIP A TOGGLE FROM FALSE TO TRUE OR TRUE TO FALSE
 // OPENING CLAW IS POSITIVE
 // CLOSING CLAW (ONTO MAGNET THATS HELD IN PLACE) IS NEGATIVE
 void setClaw(int i) {
 	motor[MClaw] = i;
 }
-
-
+//SENSOR VALUE
 int SonarValue() {
 	return SensorValue[Sonar];
 }
-
-// handy functions, because -1 is designated for no signal received.
+// HANDLES THE -1 CASE OF SONAR SENSOR
 bool SonarGreaterThan(int dist) {
 	if (SensorValue[Sonar] > dist || SensorValue[Sonar] == -1) {return true;}
 	else {return false;}
@@ -68,30 +65,34 @@ bool SonarLessThanEqual(int dist) {
 	else {return false;}
 }
 
-
-// WHEELS MOVE IN(SAME DIRECTION)
-// POSITIVE VALUES MOVE THE ROBOT FORWARD
-// BUG: THE SPEED OFFSET IS STATIC, SHOULD BE DYNAMIC (LINEAR)
-void setWheelsSpeed(int spd) {
-	motor[MLeft] = spd;
-	motor[MRight] = spd - MOTOR_CUSTOM_R_SPEED_OFFSET; // handle offset here!
+// CALL THIS TO ACTUALLY SET WHEEL MOTORS WITHOUT CONSIDERING AN OFFSET
+void setWheelsManualLR(int L, int R) {
+	motor[MLeft] = L;
+	motor[MRight] = R;
 }
-void setWheelsLR( int Left, int Right) {
-	motor[MLeft] = Left;
-	motor[MRight] = Right - MOTOR_CUSTOM_R_SPEED_OFFSET; // handle offset here!
+// WHEELS MOVE IN SAME DIRECTION and POSITIVE VALUES MOVE THE ROBOT FORWARD
+// RIGHT WHEEL MOVES FASTER NATURALLY
+void setOffsetWheels(int spd) {
+	if (spd > MOTOR_CUSTOM_R_SPEED_OFFSET) { 									// positive speed
+		setWheelsManualLR(spd,spd-MOTOR_CUSTOM_R_SPEED_OFFSET);	// negative offset
+	}
+	else if (spd < -MOTOR_CUSTOM_R_SPEED_OFFSET) { 						// negative speed
+		setWheelsManualLR(spd,spd+MOTOR_CUSTOM_R_SPEED_OFFSET);	// positive offset
+	}
+	else { // we shouldn't call this function with low values. set all to zero.
+		setWheelsManualLR(0,0);
+	}
 }
+// THIS METHOD GIVES THE FINEST GRAIN CONTROL IF USED PROPERLY
 void setWheelsLORO( int Left, int LeftOffset, int Right, int RightOffset) {
-	motor[MLeft] = Left - LeftOffset;
-	motor[MRight] = Right - RightOffset;
+	setWheelsManualLR(Left - LeftOffset,Right - RightOffset);
 }
 // STOP ALL MOTORS (FAULT TOLERANCE)
 void setAllMotorsToZero() {
-	motor[MLeft] = 0;
-	motor[MRight] = 0;
+	setWheelsManualLR(0,0);
 	motor[MClaw] = 0;
 }
-
-// Called once at the start of the program
+// CALLED ONCE AT THE START OF THE PROGRAM
 void init_devices(RobotControl & control) {
   control.button1_pushed = false;
   control.button2_pushed = false;
@@ -100,15 +101,23 @@ void init_devices(RobotControl & control) {
   control.limitLeft_pushed = false;
   control.limitRight_pushed = false;
 }
-
-// ability to toggle state of buttons
+// TOGGLE BUTTON STATES 1 AND 2
 void flip_1(RobotControl & control) {
 	control.button1_toggle_state = !control.button1_toggle_state;
 }
 void flip_2(RobotControl & control) {
 	control.button2_toggle_state = !control.button2_toggle_state;
 }
-// BUTTON 1 AND 2 ARE SET TO TRUE HERE
+// LIMITLEFT AND LIMIT RIGHT ARE SET TO TRUE HERE
+void monitorLimits( RobotControl & control)
+{
+  if(SensorValue(LimitLeft) & !control.limitLeft_pushed)
+    control.limitLeft_pushed = true;
+
+  if(SensorValue(LimitRight) & !control.limitRight_pushed)
+    control.limitRight_pushed = true;
+}
+// BUTTON 1 AND 2, and Limits ARE SET TO TRUE HERE
 void monitorInput( RobotControl & control)
 {
   if(SensorValue(Button1) && !control.button1_pushed)
@@ -117,9 +126,16 @@ void monitorInput( RobotControl & control)
   if(SensorValue(Button2) & !control.button2_pushed)
     control.button2_pushed = true;
 
-  if(SensorValue(LimitLeft) & !control.limitLeft_pushed)
-    control.limitLeft_pushed = true;
-
-  if(SensorValue(LimitRight) & !control.limitRight_pushed)
-    control.limitRight_pushed = true;
+	monitorLimits(control);
+}
+// IF THE LIMIT SWITCHES ARE TRIGGERED
+bool anyLimitHit(RobotControl & control) {
+	if (control.limitRight_pushed || control.limitLeft_pushed)
+		{return true;}
+	else {return false;}
+}
+// SET THE LIMITS TO FALSE (AFTER THEY ARE PRESSED)
+void setLimitsFalse(RobotControl & control) {
+  control.limitLeft_pushed = false;
+  control.limitRight_pushed = false;
 }

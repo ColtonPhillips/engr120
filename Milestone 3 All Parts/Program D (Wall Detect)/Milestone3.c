@@ -42,6 +42,9 @@ task main()
       case STATE_WALK:
       	state = ProcStateWalk(control);
       break;
+      case STATE_BACKAWAY:
+      	state = ProcStateBackaway(control);
+      break;
     	default: // We should never be in this state.
     }
   }
