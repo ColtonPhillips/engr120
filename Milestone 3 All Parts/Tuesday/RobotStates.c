@@ -19,10 +19,10 @@ T_state ProcStateIdle(RobotControl & control) {
 	}
 	return STATE_IDLE;
 }
-
+#define SIZEABLE_GAP 25  //in cm.
 T_state ProcStateWalk(RobotControl & control) {
 	setWheelsSpeed(MEDIUMSPEED);
-	if (SonarLessThanEqual(5)) { //cm
+	if (SonarLessThanEqual(SIZEABLE_GAP)) {
 		return STATE_IDLE;
 	}
 	return STATE_WALK;
