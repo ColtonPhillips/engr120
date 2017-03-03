@@ -4,7 +4,10 @@
 #pragma config(Sensor, dgtl2,  Button2,        sensorTouch)
 #pragma config(Sensor, dgtl3,  LimitLeft,      sensorTouch)
 #pragma config(Sensor, dgtl4,  LimitRight,     sensorTouch)
+#pragma config(Sensor, dgtl5,  LED1,           sensorDigitalOut)
 #pragma config(Sensor, dgtl8,  Sonar,          sensorSONAR_cm)
+#pragma config(Sensor, dgtl10, LED2,           sensorDigitalOut)
+#pragma config(Sensor, dgtl11, LED3,           sensorDigitalOut)
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           MLeft,         tmotorVex393_HBridge, openLoop, reversed, encoderPort, I2C_2)
 #pragma config(Motor,  port2,           MClaw,         tmotorVex393_MC29, openLoop)
@@ -25,6 +28,8 @@
 #include "Devices.c"
 #include "RobotStates.c"
 // PROGRAM STARTS HERE
+#define TOOCLOSETOTARGET 15
+#define CLOSEENOUGHTOTARGET 25
 task main()
 {
   // ROBOT BEGINS IN IDLE STATE
@@ -34,6 +39,11 @@ task main()
   RobotControl control;
    while (true)
   {
+  	// always check for light :)
+		control.beaconFound = monitorLight();
+		setLED1(control.beaconFound);
+		setLED2(control.beaconFound && SonarGreaterThan(CLOSEENOUGHTOTARGET));
+		setLED3(control.beaconFound && (SensorValue[Sonar] < 15 && SensorValue[Sonar] != -1));
     switch(state) // STATE MACHINE
     {
       case STATE_IDLE:
@@ -42,9 +52,6 @@ task main()
       case STATE_SEARCH:
       	state = ProcStateSearch(control);
       break;
-/*      case STATE_BACKAWAY:
-      	state = ProcStateBackaway(control);
-      break; */
     	default: // We should never be in this state.
     }
   }

@@ -21,10 +21,9 @@ T_state ProcStateIdle(RobotControl & control) {
 #define FOURTYFIVEDEGREES 486
 // WHEN THE ROBOT IS SEARCHING FOR THE BEACON THROUGH ROTATION
 T_state ProcStateSearch(RobotControl & control) {
-//	bool beaconFound = false;
 	static bool turningRight = true;
 	static int turningDistance = FOURTYFIVEDEGREES/4;
-	static int spd = SLOWSPEED;
+	static int spd = SLOWSPEED*1.5;
 	if (turningRight) {
 		turnRight(spd);
 	}	else {
@@ -34,10 +33,12 @@ T_state ProcStateSearch(RobotControl & control) {
 	if (turnComplete(turningDistance)) {
 		turningDistance *= 2;
 		turningRight = !turningRight;
+		resetBothEncoders();
 	}
-//	beaconFound = monitorLight();
-//	if (beaconFound) {
-	if (monitorLight()) {
+	if (control.beaconFound) {
+		turningDistance = FOURTYFIVEDEGREES/4;
+		turningRight = true;
+		resetBothEncoders();
 		return STATE_IDLE;
 	}
 	return STATE_SEARCH;
