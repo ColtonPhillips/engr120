@@ -5,6 +5,7 @@ T_state ProcStateIdle(RobotControl & control) {
   monitorInput(control);
 	setAllMotorsToZero();
 	if (control.button1_pushed) {
+		resetBothEncoders();
 		control.button1_pushed = false;
 		flip_1(control);
 		return STATE_WALK;
@@ -17,15 +18,44 @@ T_state ProcStateIdle(RobotControl & control) {
 	return STATE_IDLE;
 }
 #define SIZEABLE_GAP 25  //in cm.
-// WHEN THE ROBOT IS WALKING TOWARD THE WALL AT ANY ANGLE
-// WHEN THE ROBOT IS WALKING TOWARD THE WALL AT ANY ANGLE
 T_state ProcStateWalk(RobotControl & control) {
 	monitorLimits(control);
-	setOffsetWheels(MEDIUMSPEED);
+	// PID CODE
+	static bool canEnter = true;
+	static int totalTicks;
+	static int slavePower;
+	static int masterPower;
+	static int error;
+	static int kp;
+	if (canEnter) {
+		totalTicks = 0;
+		masterPower = MEDIUMSPEED; // left
+		slavePower = masterPower - 5;//MOTOR_CUSTOM_R_SPEED_OFFSET;
+		error = 0;
+		kp = 10;
+		// RESET BOTH WHEEL MOTOR ENCODERS TO ZERO
+		resetBothEncoders();
+		canEnter = false;
+	}
+	 //Proportional algorithm to keep the robot going straight.
+    motor[MLeft] = masterPower;
+    motor[MRight] = slavePower;
+   	if (time1[T2] > 100) {
+	    error = getMotorEncoder(MLeft) - getMotorEncoder(MRight);
+	    slavePower += error / kp;
+	    resetBothEncoders();
+	  	clearTimer(T2);
+	  }
+	// END OF PID CODE
+
+//	setOffsetWheels(MEDIUMSPEED);
 	if (SonarLessThanEqual(SIZEABLE_GAP)) {
+		canEnter = true;
+		setLimitsFalse(control);
 		return STATE_IDLE;
 	}
 	else if (anyLimitHit(control)) {
+		canEnter = true;
 		setLimitsFalse(control);
 		return STATE_BACKAWAY;
 	}
