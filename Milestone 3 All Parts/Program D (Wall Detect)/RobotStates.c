@@ -18,7 +18,6 @@ T_state ProcStateIdle(RobotControl & control) {
 }
 #define SIZEABLE_GAP 25  //in cm.
 // WHEN THE ROBOT IS WALKING TOWARD THE WALL AT ANY ANGLE
-// WHEN THE ROBOT IS WALKING TOWARD THE WALL AT ANY ANGLE
 T_state ProcStateWalk(RobotControl & control) {
 	monitorLimits(control);
 	setOffsetWheels(MEDIUMSPEED);

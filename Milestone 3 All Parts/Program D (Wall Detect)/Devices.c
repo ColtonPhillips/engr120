@@ -1,5 +1,5 @@
 #include "Milestone3.c"
-
+// the right motor has to be offset a bit
 #define MOTOR_CUSTOM_R_SPEED_OFFSET 7
 	#define FASTSPEED 100
 	#define MEDIUMSPEED 50

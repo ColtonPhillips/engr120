@@ -25,6 +25,7 @@
 #include "Devices.c"
 #include "RobotStates.c"
 // PROGRAM STARTS HERE
+// wall detection program
 task main()
 {
   // ROBOT BEGINS IN IDLE STATE

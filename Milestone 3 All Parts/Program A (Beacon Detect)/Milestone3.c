@@ -30,6 +30,7 @@
 // PROGRAM STARTS HERE
 #define TOOCLOSETOTARGET 15
 #define CLOSEENOUGHTOTARGET 25
+// beacon detection program
 task main()
 {
   // ROBOT BEGINS IN IDLE STATE
