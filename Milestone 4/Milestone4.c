@@ -36,6 +36,12 @@ task main()
       case STATE_SEARCH:
         state = ProcStateSearch(control);
       break;
+      case STATE_SWEEP:
+      	state = ProcStateSweep(control);
+      break;
+      case STATE_PINPOINT:
+      	state = ProcStatePinpoint(control);
+      break;
       case STATE_WALK:
       	state = ProcStateWalk(control);
       break;

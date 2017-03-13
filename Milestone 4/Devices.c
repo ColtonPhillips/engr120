@@ -7,6 +7,8 @@ typedef enum Robot_state
 {
   STATE_IDLE = 0,   // THE FIRST STATE
   STATE_SEARCH,     // POINTING VEHICLE TOWARD THE BEACON'S LIGHT
+  STATE_SWEEP,     // SWEEP UNTIL BEACON IS LOST TO FIND HIGHEST POINT
+  STATE_PINPOINT,     // MOVE TO HIGHEST POINT
   STATE_WALK,       // WAKING TOWARD THE BEACON STRAIGHTLY UNTIL A TRANSITION OCCURS
   STATE_STOP,       // WHEN THE VEHICLE IS IN RANGE OF THE BEACON
 } Robot_state;
@@ -21,6 +23,7 @@ typedef struct {
 	bool limitRight_pushed;
   bool beaconFound;        // is the guy facing the beacon?
 	bool targetClose;        // is the beacon nearby (in range) to the guy
+	int deltaLight;					 // the results from monitorLight are stored here, tested in SWEEP
 } RobotControl;
 
 // CALLED ONCE AT THE START OF THE PROGRAM
@@ -29,6 +32,7 @@ void initializeController(RobotControl & control) {
   control.button2_pushed = false;
   control.limitLeft_pushed = false;
   control.limitRight_pushed = false;
+  control.deltaLight = 0;
 }
 
 // claw code:
@@ -113,7 +117,7 @@ void setLimitSwitchesFalse(RobotControl & control) {
 void setLEDs(int light1, int light2, int light3) {
 	SensorValue[LED1] = light1;
 	SensorValue[LED2] = light2;
-	SensorValue[LED2] = light3;
+	SensorValue[LED3] = light3;
 }
 // SET LED1 IF PASSED TRUE AS A PARAMETER, ELSE FALSE : LED2 + LED3 AS ETC.
 void setLED1If(bool t) {

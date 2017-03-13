@@ -1,8 +1,8 @@
-const int light_threshold = 80;
+const int light_threshold = 100;
 
 // Perform processing of measurements.
 // Should be called with rate of at least 20 Hertz for proper detection of puck.
-bool monitorLight()
+bool monitorLight(RobotControl & control)
 {
 	static int minLevelIR1 = 4096;	// Minimum light level seen by IR sensor 1
 	static int maxLevelIR1 = 0;			// Maximum light level seen by IR sensor 1
@@ -16,6 +16,8 @@ bool monitorLight()
 
 	  // 100 msecs have elapsed.  Compute delta of light level.
 		diffLevelIR1 = maxLevelIR1 - minLevelIR1;
+		control.deltaLight = diffLevelIR1;
+
 
 		// Reset calculation for next 100 msecs.
 		maxLevelIR1 = 0;
@@ -38,6 +40,5 @@ bool monitorLight()
 	} else {
 	  returnValue = false;
 	}
-
 	return(returnValue);
 }
