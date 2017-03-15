@@ -1,4 +1,4 @@
-const int light_threshold = 60;
+const int light_threshold = 100;
 
 // Perform processing of measurements.
 // Should be called with rate of at least 20 Hertz for proper detection of puck.

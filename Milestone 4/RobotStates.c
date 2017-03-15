@@ -1,19 +1,19 @@
 #include "Devices.c"
 #include "LightDetector.c"
 
-const short tooCloseToTarget =  15;
-const short closeEnoughToTarget = 25;
+const short tooCloseToTarget =  5;
+const short closeEnoughToTarget = 20;
 
-void ProcBeforeAnyStateRuns(RobotControl & control) {
-  monitorButtonsAndLimitSwitches(control);
+void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
+  if (state == STATE_IDLE) {monitorButtonsAndLimitSwitches(control);}
   control.beaconFound = monitorLight(control);
-  setLED1If(control.beaconFound);
-  setLED2If(control.beaconFound && SonarGreaterThan(closeEnoughToTarget));
-  setLED3If(control.beaconFound && SonarLessThan(tooCloseToTarget)); //(SensorValue[Sonar] < tooCloseToTarget && SensorValue[Sonar] != -1));
+  //setLED1If(control.beaconFound);
+  //setLED2If(control.beaconFound && SonarGreaterThan(closeEnoughToTarget));
+  //setLED3If(control.beaconFound && SonarLessThan(tooCloseToTarget)); //(SensorValue[Sonar] < tooCloseToTarget && SensorValue[Sonar] != -1));
 		return;
   }
 
-  const short turningSpeed = 50;
+const short turningSpeed = 36;
 bool turningRight = true;
 int deltaLightMax = 0;
 int encoderAtPinpoint = 0;
@@ -25,15 +25,35 @@ Robot_state ProcStateIdle(RobotControl & control) {
     initializeTurningPController(turningRight, turningSpeed);
 		return STATE_SEARCH;
 	}
+	if (control.button2_pushed) {
+		control.button2_pushed = false;
+		return STATE_CLAWSETUP;
+	}
   return STATE_IDLE;
+}
+
+const int ClawSpeed = 20;
+const int ClawTime = 400;
+Robot_state ProcStateClawSetup(RobotControl & control) {
+	if (control.toggle_flag) {
+		setClawSpeed(ClawSpeed);
+	}
+	else {
+		setClawSpeed(-ClawSpeed);
+	}
+	control.toggle_flag = !control.toggle_flag;
+	wait1Msec(ClawTime);
+	setClawSpeed(0);
+	return STATE_IDLE;
 }
 
 int distanceToSweepBack = 0;
 const short WalkingSpeed = 30;
 const int twelveDegreesInTicks = 120;
 int distance_sweeped = 0;
-const int slowTurningSpeed = 30;
-
+const int slowTurningSpeed = 33;
+int advance_distance = 0;
+int advance_target_distance = 0;
 Robot_state ProcStateSearch(RobotControl & control) {
 	static int distance_turned = 0;
 	static int turningDistance = twelveDegreesInTicks;
@@ -47,17 +67,44 @@ Robot_state ProcStateSearch(RobotControl & control) {
 		initializeTurningPController(turningRight, turningSpeed);
 	}
 	else if (control.beaconFound) {
-    distance_turned = 0;
+		distance_turned = 0;
 		turningDistance = twelveDegreesInTicks;
 		resetPController();
-    initializeTurningPController(turningRight, slowTurningSpeed);
 		deltaLightMax = 0;
 		distanceToSweepBack = 0;
-		zeroWheelEncoders();
 		distance_sweeped = 0;
-		return STATE_SWEEP;
-	}
+		if (SonarGreaterThan(50)) {
+			setLEDs(0,1,0);
+			initializeForwardPController(WalkingSpeed);
+			advance_distance = 0;
+			advance_target_distance = SonarValueFiltered()- 65;
+			return STATE_ADVANCE;
+		}
+		else {
+			setLEDs(1,1,1);
+	    initializeTurningPController(turningRight, slowTurningSpeed);
+      return STATE_SWEEP;
+		}
+  }
 	return STATE_SEARCH;
+}
+
+const int turnRightNow = 1200;
+Robot_state ProcStateAdvance(RobotControl & control) {
+  advance_distance += driveStraight();
+	if (advance_distance > advance_target_distance) {
+		advance_distance = 0;
+		resetPController();
+		// move out of beacon range manually
+		setWheelsManuallyLR(turningSpeed,-turningSpeed);
+		wait1Msec(turnRightNow);
+		turningRight = false;
+		setWheelsManuallyLR(0,0);
+		wait1Msec(turnRightNow);
+		initializeTurningPController(turningRight, turningSpeed);
+		return STATE_SEARCH;
+	}
+	return STATE_ADVANCE;
 }
 
 Robot_state ProcStateSweep(RobotControl & control) {
@@ -97,7 +144,7 @@ Robot_state ProcStatePinpoint(RobotControl & control) {
 Robot_state ProcStateWalk(RobotControl & control) {
   driveStraight();
 	if (SonarLessThanEqual(closeEnoughToTarget)) {
-		return STATE_IDLE;
+		return STATE_CLAWOPEN;
 	}
   if (!control.beaconFound) {
     resetPController();
@@ -105,4 +152,36 @@ Robot_state ProcStateWalk(RobotControl & control) {
     return STATE_SEARCH;
   }
 	return STATE_WALK;
+}
+
+Robot_state ProcStateClawOpen(RobotControl & control) {
+
+	setClawSpeed(ClawSpeed);
+	control.toggle_flag = !control.toggle_flag;
+	wait1Msec(ClawTime);
+	setClawSpeed(0);
+	return STATE_APPROACH;
+}
+
+Robot_state ProcStateApproach(RobotControl & control) {
+	setWheelsManuallyLR(30,30);
+	wait1Msec(ClawTime);
+	stopAllMotors();
+	return STATE_BACKUP;
+}
+
+Robot_state ProcStateBackup(RobotControl & control) {
+	setWheelsManuallyLR(-30,-30);
+	wait1Msec(1.5*ClawTime);
+	stopAllMotors();
+	return STATE_CLAWCLOSE;
+}
+
+
+Robot_state ProcStateClawClose(RobotControl & control) {
+	setClawSpeed(-ClawSpeed);
+	control.toggle_flag = !control.toggle_flag;
+	wait1Msec(ClawTime);
+	setClawSpeed(0);
+	return STATE_IDLE;
 }

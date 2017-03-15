@@ -5,17 +5,16 @@
 // THE ROBOTS BEHAVIOR IS BASED UPON STATE TRANSITIONS OF TYPE ROBOT_STATE
 typedef enum Robot_state
 {
-  STATE_IDLE = 0,   // THE FIRST STATE
-  STATE_CLAWSETUP,   // toggle the claw on and off
-  STATE_SEARCH,     // POINTING VEHICLE TOWARD THE BEACON'S LIGHT
-  STATE_ADVANCE,
-  STATE_SWEEP,     // SWEEP UNTIL BEACON IS LOST TO FIND HIGHEST POINT
+  STATE_IDLE = 0,   	// THE FIRST STATE. LEFT BUTTON BEGINS SEARCH
+  STATE_CLAWSETUP, 		// PRESS THE RIGHT BUTTON TO TOGGLE OPEN/CLOSE THE CLAW
+  STATE_SEARCH,     	// POINTING VEHICLE TOWARD THE BEACON'S LIGHT
+  STATE_SWEEP,     		// SWEEP UNTIL BEACON IS LOST TO FIND HIGHEST POINT
   STATE_PINPOINT,     // MOVE TO HIGHEST POINT
-  STATE_WALK,       // WAKING TOWARD THE BEACON STRAIGHTLY UNTIL A TRANSITION OCCURS
-  STATE_CLAWOPEN,   // open the claw before attaching
-  STATE_APPROACH,
-  STATE_BACKUP,
-  STATE_CLAWCLOSE,
+  STATE_FIND1,
+  STATE_FIND2,
+  STATE_FIND3,
+  STATE_WALK,       	// WAKING TOWARD THE BEACON STRAIGHTLY UNTIL A TRANSITION OCCURS
+  STATE_STOP,       	// WHEN THE VEHICLE IS IN RANGE OF THE BEACON
 } Robot_state;
 
 // control (data) code:
@@ -24,7 +23,7 @@ typedef enum Robot_state
 typedef struct {
 	bool button1_pushed;     // button is pressed
 	bool button2_pushed;
-	bool toggle_flag; // if claw is opening or closing
+	bool toggle_flag;	// whether the claw is in open or closed state
 	bool limitLeft_pushed;   // limit switch is pressed
 	bool limitRight_pushed;
   bool beaconFound;        // is the guy facing the beacon?
@@ -55,12 +54,6 @@ void setClawSpeed(short speed) {
 // RETURN !raw! SENSOR VALUE: -1 if nothing is heard
 short SonarValue() {
 	return SensorValue[Sonar];
-}
-// RETURN !raw! SENSOR VALUE: -1 if nothing is heard
-short SonarValueFiltered() {
-	short s = SensorValue[Sonar];
-	if (s == -1 ) s = 100;
-	return s;
 }
 // RETURNS TRUE OR FALSE IF THE SONAR VALUE IS PERCEIVED TO BE IN THESE RANGES:
 bool SonarGreaterThan(short dist) {
@@ -229,16 +222,13 @@ void resetPController() {
 }
 
 // DRIVE COMPLETELY STRAIGHT
-int driveStraight() {
-	int dist = 0;
+void driveStraight() {
   setWheelsManuallyLR(masterPower,slavePower);
   if (time1[T2] > 100 ) {
     error = abs(getLeftWheelEncoder()) - abs(getRightWheelEncoder());
     slavePower += error / kp;
-    dist = abs(getLeftWheelEncoder());
     zeroWheelEncoders();
   }
-  return dist;
 }
 
 // TURN ON A DIME

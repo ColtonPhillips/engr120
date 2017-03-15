@@ -33,14 +33,11 @@ task main()
       case STATE_IDLE:
       	state = ProcStateIdle(control);
       break;
-      case STATE_CLAWSETUP:
+			case STATE_CLAWSETUP:
       	state = ProcStateClawSetup(control);
       break;
       case STATE_SEARCH:
         state = ProcStateSearch(control);
-      break;
-      case STATE_ADVANCE:
-        state = ProcStateAdvance(control);
       break;
       case STATE_SWEEP:
       	state = ProcStateSweep(control);
@@ -48,20 +45,20 @@ task main()
       case STATE_PINPOINT:
       	state = ProcStatePinpoint(control);
       break;
+      // find 1   2  and 3  point the machine toward the center of the beacon
+      /*
+      case STATE_FIND1:
+      	state = ProcStateFind1(control);
+      break;
+      case STATE_FIND2:
+      	state = ProcStateFind2(control);
+      break;
+      case STATE_FIND3:
+      	state = ProcStateFind3(control);
+      break;
+      */
       case STATE_WALK:
       	state = ProcStateWalk(control);
-      break;
-			case STATE_CLAWOPEN:
-      	state = ProcStateClawOpen(control);
-      break;
-			case STATE_APPROACH:
-      	state = ProcStateApproach(control);
-      break;
-      case STATE_BACKUP:
-      	state = ProcStateBackup(control);
-      break;
-			case STATE_CLAWCLOSE:
-      	state = ProcStateClawClose(control);
       break;
       default: // We should never be in this state.
     }
