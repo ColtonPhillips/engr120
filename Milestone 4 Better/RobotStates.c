@@ -4,19 +4,22 @@
 void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
   if (state == STATE_IDLE) {monitorButtonsAndLimitSwitches(control);}
   control.beaconFound = monitorLight(control);
-  setLEDs(state & 1,state & (1 << 1),state & (1 << 2));
+  //setLEDs(state & 1,state & (1 << 1),state & (1 << 2));
+  Search_state st = control.searchState;
+  setLEDs(st & 1,st & (1 << 1),st & (1 << 2));
+  setLED1If(control.beaconFound);
 }
 
 // LEFT BUTTON: GOTO: SEARCH STATE
 // RIGHT BUTTON: TOGGLE CLAW TO OPEN OR CLOSED
-const short searchSpeed = 34;
-bool turningRight = true;
+const short searchSpeed = 36;
 Robot_state ProcStateIdle(RobotControl & control) {
   stopAllMotors();
   if (control.button1_pushed) {
 		control.button1_pushed = false;
-   // initializeTurningPController(turningRight, searchSpeed);
-		return STATE_CLAWOPEN;
+    initializeTurningPController(true, searchSpeed); // turningRight == true
+    searchControllerConstructor(control.searchControl);
+		return STATE_SEARCH;
 	}
 	if (control.button2_pushed) {
 		control.button2_pushed = false;
@@ -40,6 +43,58 @@ Robot_state ProcStateClawToggle(RobotControl & control) {
 	setClawSpeed(0);
 	return STATE_IDLE;
 }
+
+int distanceMovedThisStep = 0;
+Robot_state ProcStateSearch(RobotControl & control) {
+  distanceMovedThisStep = TurnPerfectly();
+  control.searchControl.distanceSweeped += distanceMovedThisStep;
+  switch(control.searchState) {
+    case SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT:
+      // we should always enter this method turningRight
+      if (!control.beaconFound) {
+          control.searchState = SEARCH_SEEKING_SIGNAL_GOING_LEFT;
+          initializeTurningPController(false,searchSpeed); // turningRight == false
+          searchControllerConstructor(control.searchControl);
+      }
+    break;
+    case SEARCH_SEEKING_SIGNAL_GOING_LEFT:
+      // we should always enter this method turningLeft
+      if (control.beaconFound) {
+        // ensure you're in a found beacon range by allowing it to move a teeny bit further
+        wait1Msec(10);
+        searchControllerConstructor(control.searchControl);
+        control.searchState = SEARCH_SCANNING_GOING_LEFT;
+      }
+    break;
+    case SEARCH_SCANNING_GOING_LEFT:
+      // we should always enter this method turningLeft
+      if (control.deltaLight > control.searchControl.deltaLightMaxScanned) {
+    		control.searchControl.deltaLightMaxScanned = control.deltaLight;
+        control.searchControl.encoderAtDeltaLightMax = control.searchControl.distanceSweeped;
+    	}
+      if (!control.beaconFound) {
+        control.searchControl.distanceToEncoderAtDeltaLightMax = // distance value not reset when constructor called
+          control.searchControl.distanceSweeped -
+          control.searchControl.encoderAtDeltaLightMax;
+        searchControllerConstructor(control.searchControl);
+        initializeTurningPController(true,searchSpeed); // turningRight == true
+         control.searchState = SEARCH_MOVE_TO_MAXIMA_GOING_RIGHT;
+      }
+    break;
+    case SEARCH_MOVE_TO_MAXIMA_GOING_RIGHT:
+      // we should always enter this method turningRight
+      if (control.searchControl.distanceSweeped > control.searchControl.distanceToEncoderAtDeltaLightMax) {
+        control.searchState = SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT;
+        control.searchControl.distanceToEncoderAtDeltaLightMax = 0;
+        stopAllMotors();
+        resetPController();
+        return STATE_IDLE;
+      }
+    default:
+  }
+  return STATE_SEARCH;
+}
+
 /*
 int distanceToSweepBack = 0;
 const short WalkingSpeed = 30;

@@ -42,6 +42,7 @@ task main()
     {
       __to__(STATE_IDLE,				ProcStateIdle);
       __to__(STATE_CLAWTOGGLE,	ProcStateClawToggle);
+      __to__(STATE_SEARCH,			ProcStateSearch);
       __to__(STATE_CLAWOPEN,		ProcStateClawOpen);
       __to__(STATE_APPROACH,		ProcStateApproach);
       __to__(STATE_BACKUP,			ProcStateBackup);
