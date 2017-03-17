@@ -7,16 +7,24 @@ typedef enum SearchState_tag
 {
   SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT = 0,
   SEARCH_SEEKING_SIGNAL_GOING_LEFT,
+  SEARCH_SEEKING_SIGNAL_GOING_RIGHT,
   SEARCH_SCANNING_GOING_LEFT,
+  SEARCH_SCANNING_GOING_RIGHT,
   SEARCH_MOVE_TO_MAXIMA_GOING_RIGHT,
+  SEARCH_MOVE_TO_MAXIMA_GOING_LEFT,
 } Search_state;
 
 typedef struct SEARCHCONTROLLER {
+  // reset using Constructor function
 	int distanceSweeped;
   int encoderAtRightSide;
   int deltaLightMaxScanned;
   int encoderAtDeltaLightMax;
+
+  // manually reset
   int distanceToEncoderAtDeltaLightMax;
+  int seekingTurnaroundDistance;
+
 } SearchControl, * SEARCHCONTROLLER_PTR;
 
 void searchControllerConstructor(SearchControl & sControl) {
@@ -39,7 +47,9 @@ typedef struct ROBOTCONTROLLER {
   int minLight; // LOWEST LIGHT IN PAST 100 MILLISECONDS
 	int deltaLight;	// MAXLIGHT - MINLIGHT
 	Search_state searchState; // substates within the search routine
-  SearchControl searchControl;
+  SearchControl searchControl; // state within a state
+  int distanceAdvanced; // how far have we walked after search has been made
+  int distanceToAdvanceInTicks;
 } RobotControl, * ROBOTCONTROLLER_PTR;
 
 // CALLED ONCE AT THE START OF THE PROGRAM
@@ -49,11 +59,14 @@ void robotControlConstructor(RobotControl &control) {
   control.toggle_flag = false;
   control.limitLeft_pushed = false;
   control.limitRight_pushed = false;
+  control.distanceAdvanced = 0;
+  control.distanceToAdvanceInTicks = 0;
   // these will be set to good values if we just leave the robot for 100 ms
   control.deltaLight = 0;
   control.lightLevel = 0;
   control.maxLight = 0;
   control.minLight = 0;
+  // init the search state machine for the search state machine so you can search while you search
   control.searchState = SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT;
   searchControllerConstructor(control.searchControl);
 }

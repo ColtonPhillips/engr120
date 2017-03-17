@@ -1,4 +1,5 @@
 #include "Devices.c"
+#include "Constants.h"
 
 // THIS BLOCK OF CODE HAPPENS EVERY STEP PRIOR TO ANY PARTICULAR STATES CODE RUNS
 void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
@@ -12,12 +13,11 @@ void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
 
 // LEFT BUTTON: GOTO: SEARCH STATE
 // RIGHT BUTTON: TOGGLE CLAW TO OPEN OR CLOSED
-const short searchSpeed = 36;
 Robot_state ProcStateIdle(RobotControl & control) {
   stopAllMotors();
   if (control.button1_pushed) {
 		control.button1_pushed = false;
-    initializeTurningPController(true, searchSpeed); // turningRight == true
+    initializeTurningPController(RIGHT, searchSpeed); // turningRight == true
     searchControllerConstructor(control.searchControl);
 		return STATE_SEARCH;
 	}
@@ -29,8 +29,6 @@ Robot_state ProcStateIdle(RobotControl & control) {
 }
 
 // TOGGLE CLAW OPEN OR CLOSED AND GOTO: IDLE STATE
-const int ClawSpeed = 20;
-const int ClawTime = 400;
 Robot_state ProcStateClawToggle(RobotControl & control) {
 	if (control.toggle_flag) {
 		setClawSpeed(ClawSpeed);
@@ -52,9 +50,10 @@ Robot_state ProcStateSearch(RobotControl & control) {
     case SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT:
       // we should always enter this method turningRight
       if (!control.beaconFound) {
-          control.searchState = SEARCH_SEEKING_SIGNAL_GOING_LEFT;
-          initializeTurningPController(false,searchSpeed); // turningRight == false
-          searchControllerConstructor(control.searchControl);
+        initializeTurningPController(LEFT,searchSpeed);
+        searchControllerConstructor(control.searchControl);
+        control.searchControl.seekingTurnaroundDistance = fourtyFiveDegreesInTicks;
+        control.searchState = SEARCH_SEEKING_SIGNAL_GOING_LEFT;
       }
     break;
     case SEARCH_SEEKING_SIGNAL_GOING_LEFT:
@@ -65,9 +64,45 @@ Robot_state ProcStateSearch(RobotControl & control) {
         searchControllerConstructor(control.searchControl);
         control.searchState = SEARCH_SCANNING_GOING_LEFT;
       }
+      else if (control.searchControl.distanceSweeped > control.searchControl.seekingTurnaroundDistance) {
+        control.searchControl.seekingTurnaroundDistance *= 3;
+        initializeTurningPController(RIGHT,searchSpeed);
+        searchControllerConstructor(control.searchControl);
+        control.searchState = SEARCH_SEEKING_SIGNAL_GOING_RIGHT;
+      }
+    break;
+    case SEARCH_SEEKING_SIGNAL_GOING_RIGHT:
+      // we should always enter this method turningRight
+      if (control.beaconFound) {
+        wait1Msec(10);
+        searchControllerConstructor(control.searchControl);
+        control.searchState = SEARCH_SCANNING_GOING_RIGHT;
+      }
+      else if (control.searchControl.distanceSweeped > control.searchControl.seekingTurnaroundDistance) {
+        control.searchControl.seekingTurnaroundDistance *= 3;
+        initializeTurningPController(LEFT,searchSpeed);
+        searchControllerConstructor(control.searchControl);
+        control.searchState = SEARCH_SEEKING_SIGNAL_GOING_LEFT;
+      }
     break;
     case SEARCH_SCANNING_GOING_LEFT:
       // we should always enter this method turningLeft
+      if (control.deltaLight > control.searchControl.deltaLightMaxScanned) {
+    		control.searchControl.deltaLightMaxScanned = control.deltaLight;
+        control.searchControl.encoderAtDeltaLightMax = control.searchControl.distanceSweeped;
+    	}
+      if (!control.beaconFound) {
+        // distance value not reset when constructor called
+        control.searchControl.distanceToEncoderAtDeltaLightMax =
+          control.searchControl.distanceSweeped -
+          control.searchControl.encoderAtDeltaLightMax;
+        searchControllerConstructor(control.searchControl);
+        initializeTurningPController(RIGHT,searchSpeed);
+         control.searchState = SEARCH_MOVE_TO_MAXIMA_GOING_RIGHT;
+      }
+    break;
+    case SEARCH_SCANNING_GOING_RIGHT:
+      // we should always enter this method turningRight
       if (control.deltaLight > control.searchControl.deltaLightMaxScanned) {
     		control.searchControl.deltaLightMaxScanned = control.deltaLight;
         control.searchControl.encoderAtDeltaLightMax = control.searchControl.distanceSweeped;
@@ -77,22 +112,40 @@ Robot_state ProcStateSearch(RobotControl & control) {
           control.searchControl.distanceSweeped -
           control.searchControl.encoderAtDeltaLightMax;
         searchControllerConstructor(control.searchControl);
-        initializeTurningPController(true,searchSpeed); // turningRight == true
-         control.searchState = SEARCH_MOVE_TO_MAXIMA_GOING_RIGHT;
+        initializeTurningPController(LEFT,searchSpeed);
+         control.searchState = SEARCH_MOVE_TO_MAXIMA_GOING_LEFT;
       }
     break;
     case SEARCH_MOVE_TO_MAXIMA_GOING_RIGHT:
-      // we should always enter this method turningRight
+    case SEARCH_MOVE_TO_MAXIMA_GOING_LEFT:
       if (control.searchControl.distanceSweeped > control.searchControl.distanceToEncoderAtDeltaLightMax) {
-        control.searchState = SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT;
         control.searchControl.distanceToEncoderAtDeltaLightMax = 0;
         stopAllMotors();
-        resetPController();
-        return STATE_IDLE;
+        initializeForwardPController(WalkingSpeed);
+        control.searchState = SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT;
+        control.distanceAdvanced = 0;
+        control.distanceToAdvanceInTicks = OneCentimeterWalkedInTicks * (SonarValueFiltered() * 0.66);
+        return STATE_ADVANCE;
       }
+    break;
     default:
   }
   return STATE_SEARCH;
+}
+
+Robot_state ProcStateAdvance(RobotControl & control) {
+  control.distanceAdvanced += driveStraight();
+  if (control.distanceAdvanced > control.distanceToAdvanceInTicks) {
+    stopAllMotors();
+    initializeTurningPController(RIGHT, searchSpeed);
+    return STATE_SEARCH;
+  }
+  else if (SonarLessThanEqual(closeEnoughToTarget)) {
+    stopAllMotors();
+    resetPController();
+    return STATE_IDLE;
+  }
+  return STATE_ADVANCE;
 }
 
 /*
@@ -215,8 +268,6 @@ Robot_state ProcStateClawOpen(RobotControl & control) {
 }
 
 // DRIVE FORWARD AND STOP ALL MOTORS FOR APPROACHTIME MILLISECONDS AND GOTO: BACKUP STATE
-const int ApproachTime = 400;
-const int ApproachSpeed = 30;
 Robot_state ProcStateApproach(RobotControl & control) {
 	setWheelsManuallyLR(ApproachSpeed,ApproachSpeed);
 	wait1Msec(ApproachTime);
@@ -225,8 +276,6 @@ Robot_state ProcStateApproach(RobotControl & control) {
 }
 
 // BACK UP AND STOP ALL MOTORS FOR BACKUPTIME MILLISECONDS AND GOTO: CLAWCLOSE STATE
-const int BackupTime = 600;
-const int BackupSpeed = 30;
 Robot_state ProcStateBackup(RobotControl & control) {
 	setWheelsManuallyLR(-BackupSpeed,-BackupSpeed);
 	wait1Msec(BackupTime);
