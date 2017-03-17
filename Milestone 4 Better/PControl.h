@@ -63,7 +63,7 @@ int driveStraight() {
 int TurnPerfectly() {
   int delta = 0;
   setWheelsManuallyLR(masterPower,slavePower);
-  if (time1[T2] > 100 ) {
+  if (time1[T2] > 50 ) {
     error = abs(getLeftWheelEncoder()) - abs(getRightWheelEncoder());
     if (slavePower > 0) { // R is -
       slavePower -= error / kp;

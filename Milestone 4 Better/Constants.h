@@ -15,6 +15,6 @@ const short WalkingSpeed = 30;
 const short closeEnoughToTarget = 22;
 const int BackupTime = 1000;
 const int BackupSpeed = 35;
-const int ApproachTime = 870;
+const int ApproachTime = 873;
 const int ApproachSpeed = 27;
 #endif
