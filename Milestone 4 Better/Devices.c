@@ -6,17 +6,27 @@
 typedef enum Robot_state
 {
   STATE_IDLE = 0,   // THE FIRST STATE
-  STATE_CLAWSETUP,   // toggle the claw on and off
-  STATE_SEARCH,     // POINTING VEHICLE TOWARD THE BEACON'S LIGHT
-  STATE_ADVANCE,
-  STATE_SWEEP,     // SWEEP UNTIL BEACON IS LOST TO FIND HIGHEST POINT
-  STATE_PINPOINT,     // MOVE TO HIGHEST POINT
-  STATE_WALK,       // WAKING TOWARD THE BEACON STRAIGHTLY UNTIL A TRANSITION OCCURS
+  STATE_CLAWTOGGLE,  // PRESSING THE RIGHT BUTTON OPENS AND CLOSES THE CLAW
+                        // HATCH FOR PLACING THE CABLE (MAGNET APPROACH)
+                        // TODO: STATE SORT OF NEEDS TO KNOW ITS OWN STATE LOL
+  STATE_SEARCH,     // STAY IN THIS STATE UNTIL YOU HAVE PERFECTLY ALIGNED
+                        // TO THE CENTER OF THE BEACON
+//  STATE_ADVANCE,    // WALK FORWARD A LITTLE BIT
+//  STATE_SWEEP,     // SWEEP UNTIL BEACON IS LOST TO FIND HIGHEST POINT
+//  STATE_PINPOINT,     // MOVE TO HIGHEST POINT
+//  STATE_WALK,       // WAKING TOWARD THE BEACON STRAIGHTLY UNTIL A TRANSITION OCCURS
+
+  // THE FINAL STEPS FIRE ONE A A TIME TO MAKE CONTACT
   STATE_CLAWOPEN,   // open the claw before attaching
   STATE_APPROACH,
-  STATE_BACKUP,
   STATE_CLAWCLOSE,
+  STATE_BACKUP,
 } Robot_state;
+
+Robot_state robotStateFactory() {
+  Robot_state state = STATE_IDLE;
+  return state;
+}
 
 // control (data) code:
 
@@ -33,7 +43,7 @@ typedef struct {
 } RobotControl;
 
 // CALLED ONCE AT THE START OF THE PROGRAM
-void initializeController(RobotControl & control) {
+void robotControlConstructor(RobotControl &control) {
   control.button1_pushed = false;
   control.button2_pushed = false;
   control.toggle_flag = false;

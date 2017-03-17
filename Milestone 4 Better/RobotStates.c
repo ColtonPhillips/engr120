@@ -1,40 +1,34 @@
 #include "Devices.c"
 #include "LightDetector.c"
 
-const short tooCloseToTarget =  5;
-const short closeEnoughToTarget = 20;
-
+// THIS BLOCK OF CODE HAPPENS EVERY STEP PRIOR TO ANY PARTICULAR STATES CODE RUNS
 void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
   if (state == STATE_IDLE) {monitorButtonsAndLimitSwitches(control);}
   control.beaconFound = monitorLight(control);
-  //setLED1If(control.beaconFound);
-  //setLED2If(control.beaconFound && SonarGreaterThan(closeEnoughToTarget));
-  //setLED3If(control.beaconFound && SonarLessThan(tooCloseToTarget)); //(SensorValue[Sonar] < tooCloseToTarget && SensorValue[Sonar] != -1));
-		return;
-  }
+}
 
-const short turningSpeed = 36;
+// LEFT BUTTON: GOTO: SEARCH STATE
+// RIGHT BUTTON: TOGGLE CLAW TO OPEN OR CLOSED
+const short searchSpeed = 34;
 bool turningRight = true;
-int deltaLightMax = 0;
-int encoderAtPinpoint = 0;
-
 Robot_state ProcStateIdle(RobotControl & control) {
   stopAllMotors();
   if (control.button1_pushed) {
 		control.button1_pushed = false;
-    initializeTurningPController(turningRight, turningSpeed);
+    initializeTurningPController(turningRight, searchSpeed);
 		return STATE_SEARCH;
 	}
 	if (control.button2_pushed) {
 		control.button2_pushed = false;
-		return STATE_CLAWSETUP;
+		return STATE_CLAWTOGGLE;
 	}
   return STATE_IDLE;
 }
 
+// TOGGLE CLAW OPEN OR CLOSED AND GOTO: IDLE STATE
 const int ClawSpeed = 20;
 const int ClawTime = 400;
-Robot_state ProcStateClawSetup(RobotControl & control) {
+Robot_state ProcStateClawToggle(RobotControl & control) {
 	if (control.toggle_flag) {
 		setClawSpeed(ClawSpeed);
 	}
@@ -46,7 +40,7 @@ Robot_state ProcStateClawSetup(RobotControl & control) {
 	setClawSpeed(0);
 	return STATE_IDLE;
 }
-
+/*
 int distanceToSweepBack = 0;
 const short WalkingSpeed = 30;
 const int twelveDegreesInTicks = 120;
@@ -54,6 +48,12 @@ int distance_sweeped = 0;
 const int slowTurningSpeed = 33;
 int advance_distance = 0;
 int advance_target_distance = 0;
+int deltaLightMax = 0;
+int encoderAtPinpoint = 0;
+const short tooCloseToTarget =  5;
+const short closeEnoughToTarget = 20;
+
+
 Robot_state ProcStateSearch(RobotControl & control) {
 	static int distance_turned = 0;
 	static int turningDistance = twelveDegreesInTicks;
@@ -64,7 +64,7 @@ Robot_state ProcStateSearch(RobotControl & control) {
 		turningDistance *= 2;
 		turningRight = !turningRight;
 		resetPController();
-		initializeTurningPController(turningRight, turningSpeed);
+		initializeTurningPController(turningRight, searchSpeed);
 	}
 	else if (control.beaconFound) {
 		distance_turned = 0;
@@ -88,7 +88,7 @@ Robot_state ProcStateSearch(RobotControl & control) {
   }
 	return STATE_SEARCH;
 }
-
+/*
 const int turnRightNow = 1200;
 Robot_state ProcStateAdvance(RobotControl & control) {
   advance_distance += driveStraight();
@@ -96,17 +96,18 @@ Robot_state ProcStateAdvance(RobotControl & control) {
 		advance_distance = 0;
 		resetPController();
 		// move out of beacon range manually
-		setWheelsManuallyLR(turningSpeed,-turningSpeed);
+		setWheelsManuallyLR(searchSpeed,-searchSpeed);
 		wait1Msec(turnRightNow);
 		turningRight = false;
 		setWheelsManuallyLR(0,0);
 		wait1Msec(turnRightNow);
-		initializeTurningPController(turningRight, turningSpeed);
+		initializeTurningPController(turningRight, searchSpeed);
 		return STATE_SEARCH;
 	}
 	return STATE_ADVANCE;
 }
-
+*/
+/*
 Robot_state ProcStateSweep(RobotControl & control) {
   distance_sweeped += TurnPerfectly();
   if (control.deltaLight > deltaLightMax) {
@@ -126,7 +127,8 @@ Robot_state ProcStateSweep(RobotControl & control) {
 	}
 	return STATE_SWEEP;
 }
-
+*/
+/*
 Robot_state ProcStatePinpoint(RobotControl & control) {
 	distance_sweeped += TurnPerfectly();
 	if (distance_sweeped > distanceToSweepBack) {
@@ -139,8 +141,9 @@ Robot_state ProcStatePinpoint(RobotControl & control) {
 		return STATE_IDLE;
 	}
 	return STATE_PINPOINT;
-}
+}*/
 
+/*
 Robot_state ProcStateWalk(RobotControl & control) {
   driveStraight();
 	if (SonarLessThanEqual(closeEnoughToTarget)) {
@@ -148,14 +151,14 @@ Robot_state ProcStateWalk(RobotControl & control) {
 	}
   if (!control.beaconFound) {
     resetPController();
-    initializeTurningPController(turningRight, turningSpeed);
+    initializeTurningPController(turningRight, searchSpeed);
     return STATE_SEARCH;
   }
 	return STATE_WALK;
 }
-
+*/
+// OPEN CLAW (AND TOGGLE CLAW STATE) AND STOP CLAW MOTOR AND GOTO: APPROACH STATE
 Robot_state ProcStateClawOpen(RobotControl & control) {
-
 	setClawSpeed(ClawSpeed);
 	control.toggle_flag = !control.toggle_flag;
 	wait1Msec(ClawTime);
@@ -163,21 +166,27 @@ Robot_state ProcStateClawOpen(RobotControl & control) {
 	return STATE_APPROACH;
 }
 
+// DRIVE FORWARD AND STOP ALL MOTORS FOR APPROACHTIME MILLISECONDS AND GOTO: BACKUP STATE
+const int ApproachTime = 400;
+const int ApproachSpeed = 30;
 Robot_state ProcStateApproach(RobotControl & control) {
-	setWheelsManuallyLR(30,30);
-	wait1Msec(ClawTime);
+	setWheelsManuallyLR(ApproachSpeed,ApproachSpeed);
+	wait1Msec(ApproachTime);
 	stopAllMotors();
 	return STATE_BACKUP;
 }
 
+// BACK UP AND STOP ALL MOTORS FOR BACKUPTIME MILLISECONDS AND GOTO: CLAWCLOSE STATE
+const int BackupTime = 600;
+const int BackupSpeed = 30;
 Robot_state ProcStateBackup(RobotControl & control) {
-	setWheelsManuallyLR(-30,-30);
-	wait1Msec(1.5*ClawTime);
+	setWheelsManuallyLR(-BackupSpeed,-BackupSpeed);
+	wait1Msec(BackupTime);
 	stopAllMotors();
 	return STATE_CLAWCLOSE;
 }
 
-
+// CLOSE THE CLAW AND TOGGLE IT'S CURRENT STATE FOR CLAWTIME MILLISECONDS AND GOTO: IDLE STATE
 Robot_state ProcStateClawClose(RobotControl & control) {
 	setClawSpeed(-ClawSpeed);
 	control.toggle_flag = !control.toggle_flag;
