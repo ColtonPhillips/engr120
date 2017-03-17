@@ -9,6 +9,7 @@ bool monitorLight(RobotControl & control)
 	static int diffLevelIR1 = 0;		// Delta between maximum and minimum seen in last 0.1 seconds
 
 	int lightLevel1 = SensorValue[IRSensor];
+	control.lightLevel = lightLevel1;
 	bool returnValue;
 
 	// Check if 100 msecs have elapsed.
@@ -17,7 +18,8 @@ bool monitorLight(RobotControl & control)
 	  // 100 msecs have elapsed.  Compute delta of light level.
 		diffLevelIR1 = maxLevelIR1 - minLevelIR1;
 		control.deltaLight = diffLevelIR1;
-
+		control.maxLight = maxLevelIR1;
+		control.minLight = minLevelIR1;
 
 		// Reset calculation for next 100 msecs.
 		maxLevelIR1 = 0;

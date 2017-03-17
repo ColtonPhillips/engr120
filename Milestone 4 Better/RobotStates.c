@@ -1,10 +1,10 @@
 #include "Devices.c"
-#include "LightDetector.c"
 
 // THIS BLOCK OF CODE HAPPENS EVERY STEP PRIOR TO ANY PARTICULAR STATES CODE RUNS
 void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
   if (state == STATE_IDLE) {monitorButtonsAndLimitSwitches(control);}
   control.beaconFound = monitorLight(control);
+  setLEDs(state & 1,state & (1 << 1),state & (1 << 2));
 }
 
 // LEFT BUTTON: GOTO: SEARCH STATE
@@ -15,8 +15,8 @@ Robot_state ProcStateIdle(RobotControl & control) {
   stopAllMotors();
   if (control.button1_pushed) {
 		control.button1_pushed = false;
-    initializeTurningPController(turningRight, searchSpeed);
-		return STATE_SEARCH;
+   // initializeTurningPController(turningRight, searchSpeed);
+		return STATE_CLAWOPEN;
 	}
 	if (control.button2_pushed) {
 		control.button2_pushed = false;
@@ -63,25 +63,21 @@ Robot_state ProcStateSearch(RobotControl & control) {
     distance_turned = 0;
 		turningDistance *= 2;
 		turningRight = !turningRight;
-		resetPController();
 		initializeTurningPController(turningRight, searchSpeed);
 	}
 	else if (control.beaconFound) {
 		distance_turned = 0;
 		turningDistance = twelveDegreesInTicks;
-		resetPController();
 		deltaLightMax = 0;
 		distanceToSweepBack = 0;
 		distance_sweeped = 0;
 		if (SonarGreaterThan(50)) {
-			setLEDs(0,1,0);
 			initializeForwardPController(WalkingSpeed);
 			advance_distance = 0;
 			advance_target_distance = SonarValueFiltered()- 65;
 			return STATE_ADVANCE;
 		}
 		else {
-			setLEDs(1,1,1);
 	    initializeTurningPController(turningRight, slowTurningSpeed);
       return STATE_SWEEP;
 		}
@@ -116,7 +112,6 @@ Robot_state ProcStateSweep(RobotControl & control) {
 	}
 	else if (!control.beaconFound) {
 		turningRight = !turningRight;
-		resetPController();
 		initializeTurningPController(turningRight,slowTurningSpeed);
 		distanceToSweepBack = distance_sweeped - encoderAtPinpoint;
 		distance_sweeped = 0;
@@ -132,7 +127,6 @@ Robot_state ProcStateSweep(RobotControl & control) {
 Robot_state ProcStatePinpoint(RobotControl & control) {
 	distance_sweeped += TurnPerfectly();
 	if (distance_sweeped > distanceToSweepBack) {
-		resetPController();
 		turningRight = true;
 		initializeForwardPController(WalkingSpeed);
 		return STATE_WALK;
@@ -150,7 +144,6 @@ Robot_state ProcStateWalk(RobotControl & control) {
 		return STATE_CLAWOPEN;
 	}
   if (!control.beaconFound) {
-    resetPController();
     initializeTurningPController(turningRight, searchSpeed);
     return STATE_SEARCH;
   }
