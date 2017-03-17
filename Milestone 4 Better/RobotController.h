@@ -24,6 +24,7 @@ typedef struct SEARCHCONTROLLER {
   // manually reset
   int distanceToEncoderAtDeltaLightMax;
   int seekingTurnaroundDistance;
+  bool movingToAdvance;
 
 } SearchControl, * SEARCHCONTROLLER_PTR;
 

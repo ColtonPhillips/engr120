@@ -19,6 +19,7 @@ Robot_state ProcStateIdle(RobotControl & control) {
 		control.button1_pushed = false;
     initializeTurningPController(RIGHT, searchSpeed); // turningRight == true
     searchControllerConstructor(control.searchControl);
+    control.searchControl.movingToAdvance = true;
 		return STATE_SEARCH;
 	}
 	if (control.button2_pushed) {
@@ -119,13 +120,18 @@ Robot_state ProcStateSearch(RobotControl & control) {
     case SEARCH_MOVE_TO_MAXIMA_GOING_RIGHT:
     case SEARCH_MOVE_TO_MAXIMA_GOING_LEFT:
       if (control.searchControl.distanceSweeped > control.searchControl.distanceToEncoderAtDeltaLightMax) {
-        control.searchControl.distanceToEncoderAtDeltaLightMax = 0;
         stopAllMotors();
-        initializeForwardPController(WalkingSpeed);
         control.searchState = SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT;
         control.distanceAdvanced = 0;
-        control.distanceToAdvanceInTicks = OneCentimeterWalkedInTicks * (SonarValueFiltered() * 0.66);
-        return STATE_ADVANCE;
+        control.searchControl.distanceToEncoderAtDeltaLightMax = 0;
+        if (control.searchControl.movingToAdvance == true) {
+          initializeForwardPController(WalkingSpeed);
+          control.distanceToAdvanceInTicks = OneCentimeterWalkedInTicks * (SonarValueFiltered() * 0.66);
+          return STATE_ADVANCE;
+	      } else { // if not moving to advance, moving to approach (through claw open)
+    	    // we want to align one last time before an approach
+  	      return STATE_CLAWOPEN;
+      	}
       }
     break;
     default:
@@ -143,7 +149,9 @@ Robot_state ProcStateAdvance(RobotControl & control) {
   else if (SonarLessThanEqual(closeEnoughToTarget)) {
     stopAllMotors();
     resetPController();
-    return STATE_IDLE;
+    initializeTurningPController(RIGHT,searchSpeed);
+    control.searchControl.movingToAdvance = false; // moving to appproach through claw open
+    return STATE_SEARCH;
   }
   return STATE_ADVANCE;
 }
