@@ -4,6 +4,7 @@
 // THIS BLOCK OF CODE HAPPENS EVERY STEP PRIOR TO ANY PARTICULAR STATES CODE RUNS
 void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
   if (state == STATE_IDLE) {monitorButtons(control);}
+  if (state == STATE_SEARCH || state == STATE_ADVANCE) {monitorLimitSwitches(control);}
   monitorLight(control);
   setLEDs(0,state & (1 << 1),state & (1 << 2));
   setLED1If(control.beaconFound);
@@ -43,6 +44,10 @@ Robot_state ProcStateClawToggle(RobotControl & control) {
 
 int distanceMovedThisStep = 0;
 Robot_state ProcStateSearch(RobotControl & control) {
+  if (anyLimitSwitchHit(control)) {
+    stopAllMotors();
+    return STATE_WALL;
+  }
   distanceMovedThisStep = TurnPerfectly();
   control.searchControl.distanceSweeped += distanceMovedThisStep;
   switch(control.searchState) {
@@ -154,6 +159,33 @@ Robot_state ProcStateAdvance(RobotControl & control) {
   }
   return STATE_ADVANCE;
 }
+
+// TURN OFF P CONTROLLER, RESET SEARCH CONTROLLER, BACKUP, AND TURN NINETY DEGREES, RESET LIMIT SWITCHES, THEN GOTO: SEARCH
+Robot_state ProcStateWall(RobotControl & control) {
+  // RESET CONTROL VALUES
+  resetPController();
+  searchControllerConstructor(control.searchControl);
+  control.searchState = SEARCH_SEEKING_NO_SIGNAL_GOING_RIGHT;
+  control.searchControl.movingToAdvance = true;
+  control.searchControl.distanceToEncoderAtDeltaLightMax = 0;
+  // BACKUP
+  setWheelsManuallyLR(-WallBackupSpeed,-WallBackupSpeed);
+  wait1Msec(WallBackupTime);
+  stopAllMotors();
+  //TURN (ABOUT) 90 DEGREES
+  if (control.limitLeft_pushed) {
+    setWheelsManuallyLR(WallTurnSpeed,-WallTurnSpeed);
+  }
+  else if (control.limitRight_pushed) {
+      setWheelsManuallyLR(-WallTurnSpeed,WallTurnSpeed);
+  }
+  wait1Msec(WallTurnTime);
+  stopAllMotors();
+  setLimitSwitchesFalse(control);
+  initializeTurningPController(RIGHT, searchSpeed);
+  return STATE_SEARCH;
+}
+
 // OPEN CLAW (AND TOGGLE CLAW STATE) AND STOP CLAW MOTOR AND GOTO: APPROACH STATE
 // DRIVE FORWARD AND STOP ALL MOTORS FOR APPROACHTIME MILLISECONDS AND GOTO: BACKUP STATE
 // ---MAGNET is now attached!
@@ -178,5 +210,6 @@ Robot_state ProcStateApproach(RobotControl & control) {
 	control.claw_toggle_flag = !control.claw_toggle_flag;
 	wait1Msec(ClawTime);
 	setClawSpeed(0);
+  setLEDs(1,1,1);
 	return STATE_IDLE;
 }
