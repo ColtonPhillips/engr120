@@ -6,7 +6,6 @@ void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
   if (state == STATE_IDLE) {monitorButtons(control);}
   if (state == STATE_SEARCH || state == STATE_ADVANCE) {monitorLimitSwitches(control);}
   monitorLight(control);
-  setLEDs(0,state & (1 << 1),state & (1 << 2));
   setLED1If(control.beaconFound);
 }
 
