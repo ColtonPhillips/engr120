@@ -191,6 +191,8 @@ Robot_state ProcStateWall(RobotControl & control) {
 // BACK UP AND STOP ALL MOTORS FOR BACKUPTIME MILLISECONDS AND GOTO: CLAWCLOSE STATE
 // CLOSE THE CLAW AND TOGGLE IT'S CURRENT STATE FOR CLAWTIME MILLISECONDS AND GOTO: IDLE STATE
 Robot_state ProcStateApproach(RobotControl & control) {
+  setLEDs(1,1,1);
+  setLED3If(true);
   stopAllMotors();
   // CLAW OPEN
   setClawSpeed(ClawSpeed);
@@ -210,5 +212,6 @@ Robot_state ProcStateApproach(RobotControl & control) {
 	wait1Msec(ClawTime);
 	setClawSpeed(0);
   setLEDs(1,1,1);
+  setLED3If(true);
 	return STATE_IDLE;
 }
