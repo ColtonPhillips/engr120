@@ -9,13 +9,13 @@ const int fourtyFiveDegreesInTicks = 450;
 const int OneMeterWalkedInTicks = 2542;
 const int OneCentimeterWalkedInTicks = OneMeterWalkedInTicks / 100;
 const short WalkingSpeed = 40;
-const short closeEnoughToTarget = 22;
+const short closeEnoughToTarget = 20; // 22
 const int WallBackupTime = 1200;
 const int WallBackupSpeed = 50;
 const int WallTurnTime = 1500;
 const int WallTurnSpeed = 60;
 const int BackupTime = 1000;
 const int BackupSpeed = 35;
-const int ApproachTime = 873;
-const int ApproachSpeed = 27;
+const int ApproachTime = 883;
+const int ApproachSpeed = 28;
 #endif
