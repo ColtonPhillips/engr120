@@ -3,11 +3,9 @@
 
 // THIS BLOCK OF CODE HAPPENS EVERY STEP PRIOR TO ANY PARTICULAR STATES CODE RUNS
 void ProcBeforeAnyStateRuns(Robot_state state, RobotControl & control) {
-  if (state == STATE_IDLE) {monitorButtonsAndLimitSwitches(control);}
-  control.beaconFound = monitorLight(control);
-  //setLEDs(state & 1,state & (1 << 1),state & (1 << 2));
-  //Search_state st = control.searchState;
-  //setLEDs(st & 1,st & (1 << 1),st & (1 << 2));
+  if (state == STATE_IDLE) {monitorButtons(control);}
+  monitorLight(control);
+  setLEDs(0,state & (1 << 1),state & (1 << 2));
   setLED1If(control.beaconFound);
 }
 
@@ -17,7 +15,7 @@ Robot_state ProcStateIdle(RobotControl & control) {
   stopAllMotors();
   if (control.button1_pushed) {
 		control.button1_pushed = false;
-    initializeTurningPController(RIGHT, searchSpeed); // turningRight == true
+    initializeTurningPController(RIGHT, searchSpeed);
     searchControllerConstructor(control.searchControl);
     control.searchControl.movingToAdvance = true;
 		return STATE_SEARCH;
@@ -31,13 +29,13 @@ Robot_state ProcStateIdle(RobotControl & control) {
 
 // TOGGLE CLAW OPEN OR CLOSED AND GOTO: IDLE STATE
 Robot_state ProcStateClawToggle(RobotControl & control) {
-	if (control.toggle_flag) {
+	if (control.claw_toggle_flag) {
 		setClawSpeed(ClawSpeed);
 	}
 	else {
 		setClawSpeed(-ClawSpeed);
 	}
-	control.toggle_flag = !control.toggle_flag;
+	control.claw_toggle_flag = !control.claw_toggle_flag;
 	wait1Msec(ClawTime);
 	setClawSpeed(0);
 	return STATE_IDLE;
@@ -128,9 +126,9 @@ Robot_state ProcStateSearch(RobotControl & control) {
           initializeForwardPController(WalkingSpeed);
           control.distanceToAdvanceInTicks = OneCentimeterWalkedInTicks * (SonarValueFiltered() * 0.66);
           return STATE_ADVANCE;
-	      } else { // if not moving to advance, moving to approach (through claw open)
-    	    // we want to align one last time before an approach
-  	      return STATE_CLAWOPEN;
+	      } else {
+          // if not moving to advance, moving to approach
+    	    return STATE_APPROACH;
       	}
       }
     break;
@@ -146,6 +144,7 @@ Robot_state ProcStateAdvance(RobotControl & control) {
     initializeTurningPController(RIGHT, searchSpeed);
     return STATE_SEARCH;
   }
+  // we want to align one last time before an approach
   else if (SonarLessThanEqual(closeEnoughToTarget)) {
     stopAllMotors();
     resetPController();
@@ -155,36 +154,28 @@ Robot_state ProcStateAdvance(RobotControl & control) {
   }
   return STATE_ADVANCE;
 }
-
 // OPEN CLAW (AND TOGGLE CLAW STATE) AND STOP CLAW MOTOR AND GOTO: APPROACH STATE
-Robot_state ProcStateClawOpen(RobotControl & control) {
-	setClawSpeed(ClawSpeed);
-	control.toggle_flag = !control.toggle_flag;
+// DRIVE FORWARD AND STOP ALL MOTORS FOR APPROACHTIME MILLISECONDS AND GOTO: BACKUP STATE
+// ---MAGNET is now attached!
+// BACK UP AND STOP ALL MOTORS FOR BACKUPTIME MILLISECONDS AND GOTO: CLAWCLOSE STATE
+// CLOSE THE CLAW AND TOGGLE IT'S CURRENT STATE FOR CLAWTIME MILLISECONDS AND GOTO: IDLE STATE
+Robot_state ProcStateApproach(RobotControl & control) {
+  stopAllMotors();
+  // CLAW OPEN
+  setClawSpeed(ClawSpeed);
+	control.claw_toggle_flag = !control.claw_toggle_flag;
 	wait1Msec(ClawTime);
 	setClawSpeed(0);
-	return STATE_APPROACH;
-}
-
-// DRIVE FORWARD AND STOP ALL MOTORS FOR APPROACHTIME MILLISECONDS AND GOTO: BACKUP STATE
-Robot_state ProcStateApproach(RobotControl & control) {
+  // APPROACH
 	setWheelsManuallyLR(ApproachSpeed,ApproachSpeed);
 	wait1Msec(ApproachTime);
-	stopAllMotors();
-	return STATE_BACKUP;
-}
-
-// BACK UP AND STOP ALL MOTORS FOR BACKUPTIME MILLISECONDS AND GOTO: CLAWCLOSE STATE
-Robot_state ProcStateBackup(RobotControl & control) {
-	setWheelsManuallyLR(-BackupSpeed,-BackupSpeed);
+  // BACKUP
+  setWheelsManuallyLR(-BackupSpeed,-BackupSpeed);
 	wait1Msec(BackupTime);
 	stopAllMotors();
-	return STATE_CLAWCLOSE;
-}
-
-// CLOSE THE CLAW AND TOGGLE IT'S CURRENT STATE FOR CLAWTIME MILLISECONDS AND GOTO: IDLE STATE
-Robot_state ProcStateClawClose(RobotControl & control) {
-	setClawSpeed(-ClawSpeed);
-	control.toggle_flag = !control.toggle_flag;
+  // CLAW CLOSE
+  setClawSpeed(-ClawSpeed);
+	control.claw_toggle_flag = !control.claw_toggle_flag;
 	wait1Msec(ClawTime);
 	setClawSpeed(0);
 	return STATE_IDLE;

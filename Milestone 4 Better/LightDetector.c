@@ -1,8 +1,8 @@
-const int light_threshold = 70;
+const int light_threshold = 65;
 
 // Perform processing of measurements.
 // Should be called with rate of at least 20 Hertz for proper detection of puck.
-bool monitorLight(RobotControl & control)
+void monitorLight(RobotControl & control)
 {
 	static int minLevelIR1 = 4096;	// Minimum light level seen by IR sensor 1
 	static int maxLevelIR1 = 0;			// Maximum light level seen by IR sensor 1
@@ -42,5 +42,5 @@ bool monitorLight(RobotControl & control)
 	} else {
 	  returnValue = false;
 	}
-	return(returnValue);
+	control.beaconFound = returnValue;
 }

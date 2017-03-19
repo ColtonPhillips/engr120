@@ -44,10 +44,7 @@ task main()
       __to__(STATE_CLAWTOGGLE,	ProcStateClawToggle);
       __to__(STATE_SEARCH,			ProcStateSearch);
       __to__(STATE_ADVANCE,			ProcStateAdvance);
-      __to__(STATE_CLAWOPEN,		ProcStateClawOpen);
       __to__(STATE_APPROACH,		ProcStateApproach);
-      __to__(STATE_BACKUP,			ProcStateBackup);
-      __to__(STATE_CLAWCLOSE,		ProcStateClawClose);
       default: // We should never be in this state.
     }
   }

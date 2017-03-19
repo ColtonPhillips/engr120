@@ -2,8 +2,7 @@
 // buttons code:
 
 // A FUNCTION TO MONITOR IF THE STATE OF A BUTTON MOVES FROM 0 TO 1
-void monitorButtons( RobotControl & control)
-{
+void monitorButtons( RobotControl & control) {
   if(SensorValue(Button1) && !control.button1_pushed)
     control.button1_pushed = true;
 
@@ -14,8 +13,7 @@ void monitorButtons( RobotControl & control)
 // limit switches code:
 
 // A FUNCTION TO MONITOR IF THE STATE OF A LIMIT SWITCH MOVES FROM 0 TO 1
-void monitorLimitSwitches( RobotControl & control)
-{
+void monitorLimitSwitches( RobotControl & control) {
   if(SensorValue(LimitLeft) & !control.limitLeft_pushed)
     control.limitLeft_pushed = true;
 
@@ -24,8 +22,7 @@ void monitorLimitSwitches( RobotControl & control)
 }
 
 // MONITOR BOTH THE BUTTONS AND LIMIT SWITCHES
-void monitorButtonsAndLimitSwitches( RobotControl & control )
-{
+void monitorButtonsAndLimitSwitches( RobotControl & control ) {
   monitorButtons(control);
   monitorLimitSwitches(control);
 }

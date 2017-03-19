@@ -3,7 +3,7 @@
 
 // Proportional controller code:
 
-// THE RIGHT WHEEL IS ESTIMATED TO RUN FIVE TICK
+// THE RIGHT WHEEL IS ESTIMATED TO RUN FIVE TICKS SLOWER
 // MASTER POWER IS THE LEFT WHEEL
 // SLAVE POWER IS THE RIGHT WHEELS SLOWER SO THERE ISNT A HUGE ERROR IMMEDIATELY
 const int roughGuess = 5;
@@ -30,8 +30,8 @@ void initializeForwardPController(short speed) {
 }
 
 // INITIALIZE P CONTROLLER for turning movement BEFORE ENTERING A STATE THAT USES THE P CONTROLLER
-// speed variable should only ever be positive
-void initializeTurningPController(bool isTurningRight, short speed) { // + speed is turning right
+// speed variable should only ever be positive!
+void initializeTurningPController(bool isTurningRight, short speed) {
   resetPController();
   if (isTurningRight) // L is + , R is -
     { masterPower = speed;
@@ -76,5 +76,4 @@ int TurnPerfectly() {
   }
   return delta;
 }
-
 #endif
