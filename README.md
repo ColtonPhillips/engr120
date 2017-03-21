@@ -6,7 +6,7 @@ Isaac McRae
 
 This was like, the best class ever. :P
 
-![robot!](IMAGE1.png)
+![robot!](IMAGE1.jpg)
 
 
-![robot!](IMAGE2.png)
+![robot!](IMAGE2.jpg)
