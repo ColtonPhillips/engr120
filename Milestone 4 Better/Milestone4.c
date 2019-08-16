@@ -21,8 +21,8 @@
 // MACRO meta p r o g r a m m i n g WIZARDRY:
 	//WARNING. TOTALLY COOL. (IT'S PRONOUNCED A "SWITCH TO" DESIGN PATTERN)
 #define __to__(__X__, __Y__) case (__X__):\
-															state = __Y__(control);\
-													 break
+	state = __Y__(control);\
+	break
 
 #include "RobotStates.c"
 
@@ -41,11 +41,11 @@ task main()
     ProcBeforeAnyStateRuns(state, control);
     switch(state)
     {
-      __to__(STATE_IDLE,				ProcStateIdle);
-      __to__(STATE_CLAWTOGGLE,	ProcStateClawToggle);
-      __to__(STATE_SEARCH,			ProcStateSearch);
-      __to__(STATE_ADVANCE,			ProcStateAdvance);
-      __to__(STATE_WALL,				ProcStateWall);
+      __to__(STATE_IDLE,		ProcStateIdle);
+      __to__(STATE_CLAWTOGGLE,		ProcStateClawToggle);
+      __to__(STATE_SEARCH,		ProcStateSearch);
+      __to__(STATE_ADVANCE,		ProcStateAdvance);
+      __to__(STATE_WALL,		ProcStateWall);
       __to__(STATE_APPROACH,		ProcStateApproach);
       default: // We should never be in this state.
     }
